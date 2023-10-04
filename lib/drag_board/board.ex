@@ -18,6 +18,7 @@ defmodule DragBoard.Board do
 end
 
 defmodule DragBoard.Boards do
+  alias DragBoard.{Board, Repo}
   import Ecto.Query, only: [from: 2]
 
   def list_boards() do
@@ -26,5 +27,16 @@ defmodule DragBoard.Boards do
     |> DragBoard.Repo.preload(
       board_tasks: from(t in DragBoard.BoardTask, order_by: [asc: t.position])
     )
+  end
+
+  def add_board(name, group) do
+    changeset =
+      %Board{}
+      |> Board.changeset(%{name: name, group: group})
+
+    case Repo.insert(changeset) do
+      {:ok, _board} -> {:ok, "Board added successfully"}
+      {:error, changeset} -> {:error, "Failed to add board", changeset}
+    end
   end
 end

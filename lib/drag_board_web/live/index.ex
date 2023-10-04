@@ -12,6 +12,7 @@ defmodule DragBoardWeb.Index do
     {:ok, socket}
   end
 
+  @impl true
   def handle_event(
         "reposition",
         %{
@@ -34,6 +35,21 @@ defmodule DragBoardWeb.Index do
     {:noreply, socket}
   end
 
+  def handle_event("add_board", %{"board" => %{"name" => name, "group" => group}}, socket) do
+    if String.length(name) < 3 do
+      {:noreply, socket}
+    else
+      DragBoard.Boards.add_board(name, group)
+      boards = DragBoard.Boards.list_boards()
+
+      socket =
+        socket
+        |> assign(:boards, boards)
+
+      {:noreply, socket}
+    end
+  end
+
   def handle_event("add_item", %{"item" => %{"name" => name}, "board_id" => board_id}, socket) do
     if String.length(name) < 3 do
       {:noreply, socket}
@@ -51,20 +67,20 @@ defmodule DragBoardWeb.Index do
 
   defp list_component(assigns) do
     ~H"""
-    <div class="bg-gray-100 py-4 rounded-lg">
+    <div class="bg-gray-100 py-4 rounded-lg flex h-30">
       <div class="space-y-5 mx-auto max-w-7xl px-4 space-y-4">
         <.header>
           <%= @list_name %>
 
           <form phx-submit="add_item">
             <input value={@id} name="board_id" class="hidden" />
-            <input type="text" name="item[name]" id="item_name" />
+            <input type="text" name="item[name]" placeholder="name" />
             <.button type="submit">Add Item</.button>
           </form>
         </.header>
         <div
           id={"#{@id}-items"}
-          class="space-y-2"
+          class="space-y-2 h-full"
           phx-hook="Sortable"
           data-list_id={@id}
           data-group={@group}
@@ -74,20 +90,13 @@ defmodule DragBoardWeb.Index do
             id={"#{@id}-#{item.id}"}
             data-id={item.id}
             class="
+          max-w-md 
          drag-item:focus-within:ring-0 drag-item:focus-within:ring-offset-0
          drag-ghost:bg-zinc-300 drag-ghost:border-0 drag-ghost:ring-0
          "
           >
-            <div class="flex drag-ghost:opacity-0 border-2 select-none">
-              <button type="button" class="w-10">
-                <.icon
-                  name="hero-check-circle"
-                  class={[
-                    "w-7 h-7"
-                  ]}
-                />
-              </button>
-              <div class="flex-auto block text-sm leading-6 text-zinc-900">
+            <div class="flex drag-ghost:opacity-0 border-2 pl-5 h-14 select-none">
+              <div class="flex-auto self-center text-zinc-900">
                 <%= item.name %>
               </div>
               <button type="button" class="w-10 -mt-1 flex-none">

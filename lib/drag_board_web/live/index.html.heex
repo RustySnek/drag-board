@@ -1,9 +1,18 @@
-<div id="lists" class="grid sm:grid-cols-1 md:grid-cols-3 gap-2">
-  <.list_component
-    :for={board <- @boards}
-    id={board.id}
-    list_name={board.name}
-    group={board.group}
-    list={board.board_tasks}
-  />
+<div class="items-center flex-col space-y-5 mt-5">
+  <form phx-submit="add_board" class="text-center">
+    <input type="text" name="board[name]" placeholder="name" />
+    <input type="text" name="board[group]" placeholder="group" />
+
+    <.button type="submit">Add Board</.button>
+  </form>
+
+  <div id="lists" class="grid sm:grid-cols-1 md:grid-cols-3 gap-2">
+    <.list_component
+      :for={board <- @boards}
+      id={board.id}
+      list_name={board.name}
+      group={board.group}
+      list={board.board_tasks}
+    />
+  </div>
 </div>
