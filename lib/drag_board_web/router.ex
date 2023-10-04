@@ -17,7 +17,7 @@ defmodule DragBoardWeb.Router do
   scope "/", DragBoardWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live "/", Index
   end
 
   # Other scopes may use custom stacks.
