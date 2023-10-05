@@ -24,6 +24,7 @@ defmodule DragBoard.BoardTasks do
 
   def add_task(name, board_id) do
     board = Boards.get_board_with_desc_tasks_by_id(board_id)
+
     last_position = get_last_task_position(board)
 
     board

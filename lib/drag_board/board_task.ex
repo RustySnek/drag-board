@@ -15,5 +15,6 @@ defmodule DragBoard.BoardTask do
     |> cast(attrs, [:name, :position, :board_id])
     |> validate_required([:name, :position])
     |> validate_length(:name, min: 3)
+    |> unique_constraint([:position, :board_id])
   end
 end
