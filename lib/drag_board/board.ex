@@ -38,5 +38,7 @@ defmodule DragBoard.Boards do
       {:ok, _board} -> {:ok, "Board added successfully"}
       {:error, changeset} -> {:error, "Failed to add board", changeset}
     end
+
+    list_boards()
   end
 end

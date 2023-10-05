@@ -39,8 +39,7 @@ defmodule DragBoardWeb.Index do
     if String.length(name) < 3 do
       {:noreply, socket}
     else
-      DragBoard.Boards.add_board(name, group)
-      boards = DragBoard.Boards.list_boards()
+      boards = DragBoard.Boards.add_board(name, group)
 
       socket =
         socket
@@ -65,10 +64,10 @@ defmodule DragBoardWeb.Index do
     end
   end
 
-  defp list_component(assigns) do
+  defp board(assigns) do
     ~H"""
     <div class="bg-gray-100 py-4 rounded-lg flex h-30">
-      <div class="space-y-5 mx-auto max-w-7xl px-4 space-y-4">
+      <div class=" mx-auto max-w-7xl px-4 space-y-4">
         <.header>
           <%= @list_name %>
 

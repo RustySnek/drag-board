@@ -7,7 +7,7 @@
   </form>
 
   <div id="lists" class="grid sm:grid-cols-1 md:grid-cols-3 gap-2">
-    <.list_component
+    <.board
       :for={board <- @boards}
       id={board.id}
       list_name={board.name}
