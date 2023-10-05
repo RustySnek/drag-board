@@ -11,6 +11,7 @@ defmodule DragBoard.Boards do
 
   def get_board_with_desc_tasks_by_id(board_id) do
     BoardQueries.with_id(board_id)
+    |> Repo.one()
     |> Repo.preload(board_tasks: TaskQueries.get_tasks_in_desc_order())
   end
 
