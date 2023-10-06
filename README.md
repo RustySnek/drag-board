@@ -1,4 +1,7 @@
 # DragBoard
+### A simple drag and drop Taskboard
+![image](https://github.com/RustySnek/drag-board/assets/73820224/f4741654-7b97-4538-835c-979adaaf2df4)
+
 
 To start your Phoenix server:
 
