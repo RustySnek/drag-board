@@ -1,8 +1,20 @@
 defmodule DragBoard.Boards.BoardQueries do
   import Ecto.Query
+  alias DragBoard.BoardTasks.TaskQueries
   alias DragBoard.Board
 
   def all(query \\ base()), do: query
+
+  def list_boards_with_tasks(query \\ base()) do
+    query
+    |> all()
+    |> preload_tasks(TaskQueries.get_tasks_in_asc_order())
+  end
+
+  def preload_tasks(query \\ base(), preload_query) do
+    query
+    |> preload(board_tasks: ^preload_query)
+  end
 
   def with_id(query \\ base(), board_id) do
     query

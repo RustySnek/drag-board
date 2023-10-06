@@ -9,6 +9,21 @@ defmodule DragBoard.BoardTasks do
     |> Repo.one()
   end
 
+  defp move_tasks(tasks_to_move) do
+    fn repo, _ ->
+      try do
+        Enum.each(tasks_to_move, fn changeset ->
+          repo.update(changeset)
+        end)
+
+        {:ok, "Tasks moved successfully"}
+      catch
+        :error, reason ->
+          {:error, reason}
+      end
+    end
+  end
+
   defp get_last_task_position(board) do
     # Returns a -1 if the there are no other tasks, so when new one is created its position will be 0.
     case length(board.board_tasks) do
@@ -84,17 +99,13 @@ defmodule DragBoard.BoardTasks do
         BoardTask.changeset(task, %{"position" => new_position})
       end
 
-    Repo.transaction(fn ->
-      Enum.each(moved_tasks_in_previous_board ++ moved_tasks_in_current_board, fn changeset ->
-        case Repo.update(changeset) do
-          {:ok, _updated_task} ->
-            IO.puts("BoardTask updated successfully")
+    move_tasks_in_current_board = move_tasks(moved_tasks_in_current_board)
+    move_tasks_in_previous_board = move_tasks(moved_tasks_in_previous_board)
 
-          {:error, changeset} ->
-            IO.puts("BoardTask update failed: #{inspect(changeset.errors)}")
-        end
-      end)
-    end)
+    Ecto.Multi.new()
+    |> Ecto.Multi.run(:move_tasks_in_previous_board, move_tasks_in_previous_board)
+    |> Ecto.Multi.run(:move_tasks_in_current_board, move_tasks_in_current_board)
+    |> Repo.transaction()
   end
 
   def move_task_position(old_position, new_position, task_id, board_id) do
@@ -115,16 +126,10 @@ defmodule DragBoard.BoardTasks do
           []
       end
 
-    Repo.transaction(fn ->
-      Enum.each(moved_tasks, fn changeset ->
-        case Repo.update(changeset) do
-          {:ok, _updated_task} ->
-            IO.puts("BoardTask updated successfully")
+    move_tasks = move_tasks(moved_tasks)
 
-          {:error, changeset} ->
-            IO.puts("BoardTask update failed: #{inspect(changeset.errors)}")
-        end
-      end)
-    end)
+    Ecto.Multi.new()
+    |> Ecto.Multi.run(:move_tasks, move_tasks)
+    |> Repo.transaction()
   end
 end
