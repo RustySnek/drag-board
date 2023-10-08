@@ -27,7 +27,7 @@ let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("
 let Hooks = {}
 Hooks.Sortable = {
   mounted() {
-    let sorter = new Sortable(this.el, {
+    this.sorter = new Sortable(this.el, {
       group: this.el.dataset.group,
       animation: 150,
       delay: 0,
@@ -39,7 +39,11 @@ Hooks.Sortable = {
         this.pushEventTo(this.el, "reposition", params)
       }
     })
+  },
+  destroyed() {
+    this.sorter.destroy()
   }
+
 }
 let liveSocket = new LiveSocket("/live", Socket, { params: { _csrf_token: csrfToken }, hooks: Hooks })
 
