@@ -6,7 +6,7 @@ defmodule DragBoard.Boards do
 
   def get_board_by_id(board_id) do
     BoardQueries.with_id(board_id)
-    |> Repo.all()
+    |> Repo.one()
   end
 
   def get_board_with_desc_tasks_by_id(board_id) do
@@ -20,6 +20,11 @@ defmodule DragBoard.Boards do
     |> Repo.all()
   end
 
+  def remove_board(board_id) do
+    BoardQueries.with_id(board_id)
+    |> Repo.delete_all()
+  end
+
   def add_board(name, group) do
     changeset =
       %Board{}
@@ -27,7 +32,6 @@ defmodule DragBoard.Boards do
 
     Ecto.Multi.new()
     |> Ecto.Multi.insert(:insert_board, changeset)
-    |> Ecto.Multi.all(:list_boards, BoardQueries.list_boards_with_tasks())
     |> Repo.transaction()
   end
 end
