@@ -3,7 +3,7 @@ defmodule DragBoard.Repo.Migrations.BoardTaskBelongsToBoard do
 
   def change do
     alter table(:board_tasks) do
-      add :board_id, references(:boards), null: false
+      add :board_id, references(:boards, on_delete: :delete_all), null: false
     end
   end
 end
