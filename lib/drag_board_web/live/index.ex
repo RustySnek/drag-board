@@ -1,4 +1,6 @@
 defmodule DragBoardWeb.Index do
+  alias DragBoard.Boards
+  alias DragBoard.BoardTasks
   use DragBoardWeb, :live_view
 
   @impl true
@@ -25,12 +27,25 @@ defmodule DragBoardWeb.Index do
         socket
       ) do
     if from_board_id != board_id do
-      DragBoard.BoardTasks.move_task_board(from_board_id, board_id, id, new, old)
+      DragBoard.BoardTasks.move_task_board(board_id, id, new)
     else
       if new != old do
         DragBoard.BoardTasks.move_task_position(old, new, id, board_id)
       end
     end
+
+    socket = assign(socket, :boards, Boards.list_boards())
+
+    {:noreply, socket}
+  end
+
+  def handle_event("remove_board", %{"value" => board_id}, socket) do
+    _remove_board = Boards.remove_board(board_id)
+    boards = Boards.list_boards()
+
+    socket =
+      socket
+      |> assign(:boards, boards)
 
     {:noreply, socket}
   end
@@ -39,7 +54,8 @@ defmodule DragBoardWeb.Index do
     if String.length(name) < 3 do
       {:noreply, socket}
     else
-      boards = DragBoard.Boards.add_board(name, group)
+      _add_board = Boards.add_board(name, group)
+      boards = Boards.list_boards()
 
       socket =
         socket
@@ -49,12 +65,19 @@ defmodule DragBoardWeb.Index do
     end
   end
 
+  def handle_event("remove_task", %{"value" => task_id}, socket) do
+    _remove_task = BoardTasks.remove_task(task_id)
+    boards = Boards.list_boards()
+    socket = assign(socket, :boards, boards)
+    {:noreply, socket}
+  end
+
   def handle_event("add_item", %{"item" => %{"name" => name}, "board_id" => board_id}, socket) do
     if String.length(name) < 3 do
       {:noreply, socket}
     else
-      DragBoard.BoardTasks.add_task(name, board_id)
-      boards = DragBoard.Boards.list_boards()
+      BoardTasks.add_task(name, board_id)
+      boards = Boards.list_boards()
 
       socket =
         socket
@@ -96,15 +119,29 @@ defmodule DragBoardWeb.Index do
           >
             <div class="flex drag-ghost:opacity-0 border-2 pl-5 h-14 select-none">
               <div class="flex-auto self-center text-zinc-900">
+                <%= item.position %>
                 <%= item.name %>
               </div>
-              <button type="button" class="w-10 -mt-1 flex-none">
+              <button
+                type="button"
+                phx-click="remove_task"
+                value={item.id}
+                class="w-10 -mt-1 flex-none"
+              >
                 <.icon name="hero-x-mark" />
               </button>
             </div>
           </div>
         </div>
       </div>
+      <button
+        type="button"
+        phx-click="remove_board"
+        value={@id}
+        class="w-10 scale-125 -mt-1 self-start"
+      >
+        <.icon name="hero-x-mark" />
+      </button>
     </div>
     """
   end
