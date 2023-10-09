@@ -65,7 +65,7 @@ defmodule DragBoard.BoardTasks do
     end
   end
 
-  def move_task_board(board_id, task_id, new_position) do
+  def move_task_board(previous_board_id, board_id, task_id, new_position, old_position) do
     move_task =
       get_task_by_id(task_id)
       |> BoardTask.changeset(%{"position" => new_position, "board_id" => board_id})
@@ -81,7 +81,24 @@ defmodule DragBoard.BoardTasks do
         BoardTask.changeset(task, %{"position" => new_position})
       end
 
+    tasks_to_move =
+      TaskQueries.all_by_board_id(previous_board_id)
+      |> TaskQueries.get_leftover_tasks_from_below_without_new_position(old_position, task_id)
+      |> Repo.all()
+
+    moved_tasks_in_previous_board =
+      for task <- tasks_to_move do
+        new_position = task.position - 1
+        BoardTask.changeset(task, %{"position" => new_position})
+      end
+
     multi = Ecto.Multi.new()
+
+    multi =
+      Enum.reduce(moved_tasks_in_previous_board, multi, fn change, multi ->
+        id = Ecto.Changeset.get_field(change, :id)
+        Ecto.Multi.update(multi, {:move_task, id}, change)
+      end)
 
     Enum.reduce(moved_tasks_in_current_board, multi, fn change, multi ->
       id = Ecto.Changeset.get_field(change, :id)

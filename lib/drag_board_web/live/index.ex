@@ -27,7 +27,7 @@ defmodule DragBoardWeb.Index do
         socket
       ) do
     if from_board_id != board_id do
-      DragBoard.BoardTasks.move_task_board(board_id, id, new)
+      DragBoard.BoardTasks.move_task_board(from_board_id, board_id, id, new, old)
     else
       if new != old do
         DragBoard.BoardTasks.move_task_position(old, new, id, board_id)
