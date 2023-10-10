@@ -5,9 +5,13 @@ defmodule DragBoard.Boards.BoardQueries do
 
   def all(query \\ base()), do: query
 
+  def from_group(query \\ base(), group_id) do
+    query
+    |> where([board: board], board.group_id == ^group_id)
+  end
+
   def list_boards_with_tasks(query \\ base()) do
     query
-    |> all()
     |> preload_tasks(TaskQueries.get_tasks_in_asc_order())
   end
 
