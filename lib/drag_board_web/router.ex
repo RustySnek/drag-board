@@ -18,6 +18,7 @@ defmodule DragBoardWeb.Router do
     pipe_through :browser
 
     live "/", Index
+    live "/boards/:id", GroupView.Index
   end
 
   # Other scopes may use custom stacks.
