@@ -4,7 +4,6 @@ defmodule DragBoard.Repo.Migrations.CreateBoards do
   def change do
     create table(:boards) do
       add :name, :string
-      add :group, :string
 
       timestamps()
     end

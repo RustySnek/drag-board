@@ -1,8 +1,8 @@
 defmodule DragBoard.Boards do
+  alias DragBoard.Group
   alias DragBoard.Repo
   alias DragBoard.Boards.BoardQueries
   alias DragBoard.BoardTasks.TaskQueries
-  alias DragBoard.Board
 
   def get_board_by_id(board_id) do
     BoardQueries.with_id(board_id)
@@ -15,6 +15,12 @@ defmodule DragBoard.Boards do
     |> Repo.one()
   end
 
+  def list_boards_from_group(group_id) do
+    BoardQueries.from_group(group_id)
+    |> BoardQueries.list_boards_with_tasks()
+    |> Repo.all()
+  end
+
   def list_boards() do
     BoardQueries.list_boards_with_tasks()
     |> Repo.all()
@@ -25,13 +31,13 @@ defmodule DragBoard.Boards do
     |> Repo.delete_all()
   end
 
-  def add_board(name, group) do
-    changeset =
-      %Board{}
-      |> Board.changeset(%{name: name, group: group})
+  def add_board(name, group_id) do
+    group = Repo.get(Group, group_id)
+
+    new_board = Ecto.build_assoc(group, :boards, %{name: name})
 
     Ecto.Multi.new()
-    |> Ecto.Multi.insert(:insert_board, changeset)
+    |> Ecto.Multi.insert(:insert_new_board, new_board)
     |> Repo.transaction()
   end
 end

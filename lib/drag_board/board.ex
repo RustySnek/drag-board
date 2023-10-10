@@ -4,7 +4,8 @@ defmodule DragBoard.Board do
 
   schema "boards" do
     field :name, :string
-    field :group, :string
+    belongs_to :group, DragBoard.Group
+
     has_many :board_tasks, DragBoard.BoardTask
     timestamps()
   end
