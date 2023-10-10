@@ -1,0 +1,22 @@
+<div class="items-center flex-col space-y-5 mt-5">
+  <form phx-submit="add_board" class="text-center space-x-2  text-white ">
+    <input type="text" class="rounded-lg bg-[#121212]" name="board[name]" placeholder="name" />
+
+    <button
+      class="bg-green-600 hover:brightness-125 transition px-4 py-2 rounded-lg"
+      type="submit"
+    >
+      Add Board
+    </button>
+  </form>
+
+  <div class="flex-wrap flex text-white gap-4 justify-center">
+    <.board
+      :for={board <- @boards}
+      id={board.id}
+      list_name={board.name}
+      group_id={board.group_id}
+      list={board.board_tasks}
+    />
+  </div>
+</div>
