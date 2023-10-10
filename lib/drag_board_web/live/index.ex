@@ -1,16 +1,11 @@
 defmodule DragBoardWeb.Index do
-  alias DragBoard.Boards
-  alias DragBoard.BoardTasks
+  alias DragBoard.Groups
   use DragBoardWeb, :live_view
 
   @impl true
   def mount(_params, _session, socket) do
-    boards = DragBoard.Boards.list_boards()
-
-    socket =
-      socket
-      |> assign(:boards, boards)
-
+    groups = Groups.list_groups_with_boards()
+    socket = socket |> assign(:groups, groups)
     {:ok, socket}
   end
 
@@ -21,128 +16,89 @@ defmodule DragBoardWeb.Index do
           "old" => old,
           "new" => new,
           "id" => id,
-          "to" => %{"list_id" => board_id},
-          "from" => %{"list_id" => from_board_id}
+          "to" => %{"list_id" => list_id},
+          "from" => from
         },
         socket
       ) do
-    if from_board_id != board_id do
-      DragBoard.BoardTasks.move_task_board(from_board_id, board_id, id, new, old)
-    else
-      if new != old do
-        DragBoard.BoardTasks.move_task_position(old, new, id, board_id)
-      end
+    if list_id == "trash" do
+      Groups.remove_group(id)
     end
 
-    socket = assign(socket, :boards, Boards.list_boards())
+    {:noreply, assign(socket, :groups, Groups.list_groups_with_boards())}
+  end
 
+  def handle_event("add_group", %{"name" => name}, socket) do
+    _add_group = Groups.add_group(name)
+    groups = Groups.list_groups_with_boards()
+
+    socket = socket |> assign(:groups, groups)
     {:noreply, socket}
   end
 
-  def handle_event("remove_board", %{"value" => board_id}, socket) do
-    _remove_board = Boards.remove_board(board_id)
-    boards = Boards.list_boards()
-
-    socket =
-      socket
-      |> assign(:boards, boards)
-
+  def handle_event("remove_group", %{"value" => group_id}, socket) do
+    _remove_group = Groups.remove_group(group_id)
+    groups = Groups.list_groups_with_boards()
+    socket = socket |> assign(:groups, groups)
     {:noreply, socket}
   end
 
-  def handle_event("add_board", %{"board" => %{"name" => name, "group" => group}}, socket) do
-    if String.length(name) < 3 do
-      {:noreply, socket}
-    else
-      _add_board = Boards.add_board(name, group)
-      boards = Boards.list_boards()
+  defp add_group_form(assigns) do
+    ~H"""
+    <form phx-submit="add_group" class="text-center space-x-4 text-white">
+      <input class="bg-[#121212] rounded-lg" type="text" name="name" placeholder="name" />
 
-      socket =
-        socket
-        |> assign(:boards, boards)
-
-      {:noreply, socket}
-    end
+      <button class="bg-green-600 hover:brightness-125 transition px-4 py-2 rounded-lg" type="submit">
+        Add Group
+      </button>
+    </form>
+    """
   end
 
-  def handle_event("remove_task", %{"value" => task_id}, socket) do
-    _remove_task = BoardTasks.remove_task(task_id)
-    boards = Boards.list_boards()
-    socket = assign(socket, :boards, boards)
-    {:noreply, socket}
-  end
-
-  def handle_event("add_item", %{"item" => %{"name" => name}, "board_id" => board_id}, socket) do
-    if String.length(name) < 3 do
-      {:noreply, socket}
-    else
-      BoardTasks.add_task(name, board_id)
-      boards = Boards.list_boards()
-
-      socket =
-        socket
-        |> assign(:boards, boards)
-
-      {:noreply, socket}
-    end
+  defp board_task(assigns) do
+    ~H"""
+    <div class="truncate">
+      <%= @name %>
+    </div>
+    """
   end
 
   defp board(assigns) do
     ~H"""
-    <div class="bg-gray-100 py-4 rounded-lg flex h-30">
-      <div class=" mx-auto max-w-7xl px-4 space-y-4">
-        <.header>
-          <%= @list_name %>
-
-          <form phx-submit="add_item">
-            <input value={@id} name="board_id" class="hidden" />
-            <input type="text" name="item[name]" placeholder="name" />
-            <.button type="submit">Add Item</.button>
-          </form>
-        </.header>
-        <div
-          id={"#{@id}-items"}
-          class="space-y-2 h-full"
-          phx-hook="Sortable"
-          data-list_id={@id}
-          data-group={@group}
-        >
-          <div
-            :for={item <- @list}
-            id={"#{@id}-#{item.id}"}
-            data-id={item.id}
-            class="
-          max-w-md 
-         drag-item:focus-within:ring-0 drag-item:focus-within:ring-offset-0
-         drag-ghost:bg-zinc-300 drag-ghost:border-0 drag-ghost:ring-0
-         "
-          >
-            <div class="flex drag-ghost:opacity-0 border-2 pl-5 h-14 select-none">
-              <div class="flex-auto self-center text-zinc-900">
-                <%= item.position %>
-                <%= item.name %>
-              </div>
-              <button
-                type="button"
-                phx-click="remove_task"
-                value={item.id}
-                class="w-10 -mt-1 flex-none"
-              >
-                <.icon name="hero-x-mark" />
-              </button>
-            </div>
-          </div>
-        </div>
+    <div class="w-32 
+    ">
+      <div class="font-semibold ">
+        <%= @name %>
       </div>
-      <button
-        type="button"
-        phx-click="remove_board"
-        value={@id}
-        class="w-10 scale-125 -mt-1 self-start"
-      >
-        <.icon name="hero-x-mark" />
-      </button>
+      <div class=" rounded-lg border-gray-300 border px-8 py-1 mt-1
+        ">
+        <.board_task :for={task <- @tasks} name={task.name} />
+      </div>
     </div>
+    """
+  end
+
+  defp group(assigns) do
+    ~H"""
+    <a
+      href={~p"/boards/#{@group_id}"}
+      id={"#{@group_id}-group"}
+      data-id={@group_id}
+      class="rounded-lg  text-white bg-[#1f1f1f] py-2 min-w-[15%] h-44 text-center "
+    >
+      <div class="font-bold border-b border-gray-600 pb-2">
+        <%= @name %>
+      </div>
+      <div class="flex justify-evenly space-x-4 my-4 mx-4">
+        <.board
+          :for={board <- @boards}
+          name={board.name}
+          id={board.id}
+          tasks={board.board_tasks |> Enum.take(3)}
+        >
+        </.board>
+      </div>
+    </a>
     """
   end
 end
